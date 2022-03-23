@@ -1,2 +1,6 @@
 @import "./styles/_base.css";
 @import "./styles/_card.css";
+
+input[type="checkbox"]:checked + label {
+  text-decoration: line-through;
+}
