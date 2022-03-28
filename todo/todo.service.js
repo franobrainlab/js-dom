@@ -1,30 +1,48 @@
+import { TODO_LOCAL_STORAGE_KEY } from "./todo.constants.js";
 import { Todo } from "./todo.model.js";
 
-export function addNewTodo({ text, isDone }) {
-  const todoElements = document.querySelectorAll("main > div");
-  const i = todoElements.length || 0;
+const _getTodoTemplate = (text, i) => `
+<input type="checkbox" name="checkbox-${i}" id="checkbox-${i}" />
+<label for="checkbox-${i}">${text}</label>
+<button>&#10005;</button>
+`;
 
+const _createTodoElement = (text) => {
   const divElement = document.createElement("div");
   divElement.classList.add("todo");
-  divElement.innerHTML = _getTodoTemplate(text, i);
+  divElement.innerHTML = _getTodoTemplate(text, getTodoElements().length || 0);
+  return divElement;
+};
 
-  const inputElement = divElement.querySelector("input");
-  inputElement.checked = isDone;
-
-  document.querySelector("main").prepend(divElement);
-
-  // Dodaj u local storage nakon kreiranja novog todo-a
-  const todosElements = document.querySelectorAll(".todo");
-  const realTodos = [...todosElements].reverse().map((todoElement) => {
+const _getAllTodos = (todoElements) =>
+  [...todoElements].reverse().map((todoElement) => {
     const text = todoElement.querySelector("label").innerText;
     const isDone = todoElement.querySelector("input").checked;
     return new Todo(text, isDone);
   });
-  localStorage.setItem("TODOS", JSON.stringify(realTodos));
+
+export const getTodoElements = () => [...document.querySelectorAll(".todo")];
+
+export function saveToLocalStorage() {
+  const todos = _getAllTodos(getTodoElements());
+  localStorage.setItem(TODO_LOCAL_STORAGE_KEY, JSON.stringify(todos));
 }
 
-// <input type="checkbox" name="checkbox-${i}" id="checkbox-${i}" ${isDone ? "checked" : ""}/>
-const _getTodoTemplate = (text, i) => `
-  <input type="checkbox" name="checkbox-${i}" id="checkbox-${i}" />
-  <label for="checkbox-${i}">${text}</label>
-`;
+export function addNewTodo({ text, isDone }) {
+  const todoElement = _createTodoElement(text);
+
+  const inputElement = todoElement.querySelector("input");
+  inputElement.checked = isDone;
+  inputElement.addEventListener("change", () => saveToLocalStorage());
+
+  todoElement.querySelector("button").addEventListener("click", () => {
+    if (confirm("Jesi siguran?")) {
+      todoElement.remove();
+      saveToLocalStorage();
+    }
+  });
+
+  document.querySelector("main").prepend(todoElement);
+
+  saveToLocalStorage();
+}
