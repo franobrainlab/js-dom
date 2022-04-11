@@ -1,23 +1,25 @@
 import {
   addNewTodo,
   getTodoElements,
-  saveToLocalStorage,
-  Todo,
-  TODO_LOCAL_STORAGE_KEY,
+  getTodos,
+  postTodo,
+  deleteTodo,
 } from "./todo/index.js";
 
-const localStorageTodos = JSON.parse(
-  localStorage.getItem(TODO_LOCAL_STORAGE_KEY)
-);
-if (localStorageTodos) {
-  [...localStorageTodos].forEach(addNewTodo);
+const todos = await getTodos();
+
+if (todos) {
+  [...todos].forEach(addNewTodo);
 }
 
 // DODAVANJE NOVOG TODO-a
 const todoForm = document.forms.namedItem("todo-form");
 todoForm.addEventListener("submit", (event) => {
   event.preventDefault();
-  addNewTodo(new Todo(todoForm.querySelector("input").value));
+
+  const title = todoForm.querySelector("input").value;
+
+  postTodo(title).then(addNewTodo);
   todoForm.reset();
 });
 
@@ -29,7 +31,9 @@ const _getAllDoneTodoElements = () =>
     (todoElement) => todoElement.querySelector("input").checked
   );
 
-document.getElementById("remove-done").addEventListener("click", () => {
+document.getElementById("remove-done").addEventListener("click", async () => {
+  const todos = await getTodos();
+
+  todos.forEach(({ id }) => deleteTodo(id));
   _getAllDoneTodoElements().forEach((todoElement) => todoElement.remove());
-  saveToLocalStorage();
 });
